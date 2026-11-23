@@ -1,0 +1,10 @@
+{
+  "name": "Mi Finanzas - Control de gastos e ingresos",
+  "short_name": "Mi Finanzas",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f3f6f4",
+  "theme_color": "#10251d",
+  "description": "Control personal de ingresos, gastos y compromisos en CAD.",
+  "icons": []
+}
