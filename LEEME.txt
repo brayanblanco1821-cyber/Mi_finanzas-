@@ -1,0 +1,28 @@
+MI FINANZAS — PROYECTO PWA PARA ANDROID
+
+Contenido:
+- index.html: aplicación interactiva.
+- manifest.webmanifest: configuración de instalación PWA.
+- sw.js: caché para funcionamiento sin conexión después de la primera carga.
+
+Funciones:
+- Moneda CAD e ingreso habitual cada jueves (predeterminado $970).
+- Compromisos semanales, mensuales, quincenales y únicos.
+- Guardería mensual con importe variable editable.
+- Registro de pagos con importe real y fecha.
+- Historial local de pagos.
+- Conteo automático de jueves por mes (4 o 5).
+- Cálculo de reservas mensuales prorrateadas por 52 pagos.
+- Almacenamiento local en el dispositivo mediante localStorage.
+
+INSTALACIÓN EN ANDROID:
+Esta carpeta es una PWA. Para que Chrome ofrezca “Instalar aplicación” o “Añadir a pantalla de inicio”, primero debe publicarse en un alojamiento HTTPS (por ejemplo, un sitio web estático privado). Luego:
+1. Abre la dirección HTTPS en Chrome en Android.
+2. Abre el menú ⋮.
+3. Selecciona “Instalar aplicación” o “Añadir a pantalla de inicio”.
+
+IMPORTANTE:
+- Este ZIP contiene el proyecto web instalable, no un APK nativo.
+- Los datos se guardan en el almacenamiento del navegador/dispositivo. No hay sincronización en la nube ni recuperación si se borran los datos del navegador.
+- Haz copias de seguridad manuales antes de cambiar de dispositivo.
+- La estimación financiera es orientativa. Los pagos semanales, quincenales y mensuales se presupuestan por frecuencia; los compromisos reales y fechas deben mantenerse actualizados.

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10251d">
+<meta name="description" content="Control personal de ingresos, gastos y compromisos en CAD.">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Mi Finanzas</title>
+<style>
+:root{--bg:#f3f6f4;--card:#fff;--ink:#17231d;--muted:#66736b;--green:#16764a;--line:#e2e9e4;--red:#b42318;--amber:#986500}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:#10251d;color:white;padding:22px 18px 18px;border-radius:0 0 22px 22px}
+header h1{margin:0;font-size:23px}header p{margin:5px 0 0;color:#c7d8ce;font-size:13px}
+main{max-width:760px;margin:auto;padding:14px 14px 90px}.tabs{display:flex;gap:7px;margin:14px 0;position:sticky;top:0;background:var(--bg);padding:7px 0;z-index:2}
+.tabs button{flex:1;padding:11px 5px;border:1px solid var(--line);border-radius:12px;background:white;color:var(--ink);font-weight:650}
+.tabs button.active{background:#10251d;color:white;border-color:#10251d}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:11px;box-shadow:0 2px 8px #10251d08}
+.kicker{font-size:12px;color:var(--muted)}.big{font-size:25px;font-weight:750;margin-top:5px}.green{color:var(--green)}.red{color:var(--red)}
+h2{font-size:17px;margin:17px 0 10px}h3{font-size:15px;margin:0 0 8px}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 5px}
+input,select{width:100%;padding:12px;border:1px solid #ccd7cf;border-radius:10px;background:white;color:var(--ink);font:inherit}
+button{cursor:pointer;font:inherit}.primary{border:0;background:var(--green);color:white;padding:12px 15px;border-radius:11px;font-weight:700;width:100%;margin-top:10px}
+.secondary{border:1px solid var(--line);background:white;padding:8px 11px;border-radius:9px}
+.danger{color:var(--red)}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.item{padding:13px 0;border-bottom:1px solid var(--line)}.item:last-child{border:0}
+.badge{font-size:11px;padding:4px 8px;border-radius:20px;background:#fff3d6;color:var(--amber);white-space:nowrap}
+.badge.paid{background:#e3f5eb;color:var(--green)}.badge.overdue{background:#fde8e7;color:var(--red)}
+.small{font-size:12px;color:var(--muted)}.months{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.month{background:#f1f5f2;border-radius:11px;padding:10px;text-align:center}.month.five{background:#e3f5eb;border:1px solid #b9e3ca}
+.month b{display:block;font-size:18px}.month span{font-size:11px;color:var(--muted)}
+.hidden{display:none!important}.inline{display:flex;gap:8px}.inline>*{flex:1}
+footer{font-size:11px;color:var(--muted);text-align:center;padding:15px}
+.notice{background:#eef5f0;border-radius:12px;padding:12px;font-size:13px;color:#345342}
+</style>
+</head>
+<body>
+<header><h1>Mi Finanzas</h1><p>Control personal · Dólares canadienses (CAD)</p></header>
+<main>
+<div class="tabs">
+<button class="active" data-tab="home">Resumen</button><button data-tab="commitments">Compromisos</button><button data-tab="payments">Pagos</button><button data-tab="calendar">Calendario</button>
+</div>
+<section id="home">
+<div class="grid">
+<div class="card"><div class="kicker">Ingreso habitual cada jueves</div><div class="big green" id="incomeCard">$970.00</div></div>
+<div class="card"><div class="kicker">Disponible estimado por pago</div><div class="big" id="availableCard">$0.00</div></div>
+</div>
+<div class="card">
+<h3>Configuración de ingresos</h3>
+<label>Salario neto habitual (CAD)</label><input id="income" type="number" min="0" step=".01" value="970">
+<label>Primer jueves de referencia (para contar pagos)</label><input id="anchor" type="date" value="2026-11-26">
+<button class="primary" id="saveSettings">Guardar configuración</button>
+</div>
+<div class="card">
+<h3>Distribución semanal estimada</h3>
+<div class="row"><span class="small">Gastos semanales</span><b id="weeklyTotal">$0.00</b></div>
+<div class="row" style="margin-top:8px"><span class="small">Reserva de gastos mensuales por pago</span><b id="monthlyReserve">$0.00</b></div>
+<hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
+<div class="row"><b>Disponible después de reservas</b><b id="weeklyAvailable">$0.00</b></div>
+<p class="small">La reserva mensual se prorratea por año: gastos mensuales × 12 ÷ 52. El calendario usa los jueves reales de cada mes.</p>
+</div>
+<div class="card"><h3 id="currentMonthTitle">Mes actual</h3>
+<div class="row"><span class="small">Pagos de jueves en este mes</span><b id="currentCount">—</b></div>
+<div class="row" style="margin-top:8px"><span class="small">Ingreso esperado del mes</span><b id="currentIncome">—</b></div>
+<div class="row" style="margin-top:8px"><span class="small">Balance estimado tras gastos</span><b id="currentBalance">—</b></div>
+<div class="notice" style="margin-top:12px">En los meses con cinco jueves, el quinto ingreso se incorpora automáticamente al cálculo. No tienes que activar nada.</div>
+</div>
+<div class="card"><h3>Próximos compromisos</h3><div id="upcoming"></div></div>
+</section>
+<section id="commitments" class="hidden">
+<div class="card">
+<h3>Agregar compromiso</h3>
+<label>Nombre</label><input id="newName" placeholder="Ej. teléfono, gasolina, deuda">
+<div class="inline">
+<div><label>Importe presupuestado (CAD)</label><input id="newAmount" type="number" min="0" step=".01" placeholder="0.00"></div>
+<div><label>Frecuencia</label><select id="newFrequency"><option value="weekly">Semanal</option><option value="monthly" selected>Mensual</option><option value="biweekly">Quincenal</option><option value="once">Único</option></select></div>
+</div>
+<label>Día de vencimiento (si aplica)</label><input id="newDue" type="number" min="1" max="31" placeholder="Ej. 14">
+<label>Fecha del próximo pago (para gasto único o fecha específica)</label><input id="newDate" type="date">
+<button class="primary" id="addCommitment">Agregar compromiso</button>
+</div>
+<div class="card"><h3>Compromisos registrados</h3><div id="commitmentList"></div></div>
+</section>
+<section id="payments" class="hidden">
+<div class="card">
+<h3>Registrar pago real</h3>
+<label>Compromiso</label><select id="payCommitment"></select>
+<div class="inline">
+<div><label>Importe realmente pagado (CAD)</label><input id="paidAmount" type="number" min="0" step=".01" placeholder="Importe real"></div>
+<div><label>Fecha de pago</label><input id="paidDate" type="date"></div>
+</div>
+<button class="primary" id="recordPayment">Registrar pago y marcar como hecho</button>
+<p class="small">Cada pago queda en el historial con su importe y fecha. Puedes registrar varios pagos del mismo compromiso.</p>
+</div>
+<div class="card"><h3>Historial de pagos</h3><div id="paymentHistory"></div></div>
+</section>
+<section id="calendar" class="hidden">
+<div class="card">
+<div class="row"><h3>Calendario de pagos</h3><select id="calendarYear" style="width:auto"></select></div>
+<p class="small">Número de jueves en cada mes: se calcula directamente desde el calendario del año seleccionado.</p>
+<div class="months" id="monthGrid"></div>
+</div>
+<div class="card"><h3>Cómo se calcula</h3><p class="small">Se cuentan los jueves de cada mes, porque tu salario se paga los jueves. Cada mes incluye 4 o 5 fechas de pago. El presupuesto mensual resta los gastos semanales multiplicados por el número real de pagos y los compromisos mensuales configurados.</p></div>
+</section>
+<footer>Los datos se guardan en este dispositivo. Exporta una copia de seguridad periódicamente.</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id), money=n=>new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD'}).format(Number(n)||0);
+const today=()=>new Date().toISOString().slice(0,10);
+let state=JSON.parse(localStorage.getItem('mifinanzas_v1')||'null')||{
+ income:970,anchor:'2026-11-26',commitments:[
+ {id:1,name:'Comida',amount:0,frequency:'weekly',due:'',date:'',active:true},
+ {id:2,name:'Transporte',amount:0,frequency:'weekly',due:'',date:'',active:true},
+ {id:3,name:'Guardería',amount:0,frequency:'monthly',due:'',date:'',active:true},
+ {id:4,name:'Alquiler',amount:0,frequency:'monthly',due:1,date:'',active:true},
+ {id:5,name:'Seguro',amount:0,frequency:'monthly',due:9,date:'',active:true},
+ {id:6,name:'Internet',amount:0,frequency:'monthly',due:14,date:'',active:true},
+ {id:7,name:'Casa',amount:0,frequency:'monthly',due:14,date:'',active:true},
+ {id:8,name:'Hydro-Québec',amount:0,frequency:'monthly',due:20,date:'',active:true}
+ ],payments:[]
+};
+function save(){localStorage.setItem('mifinanzas_v1',JSON.stringify(state));render()}
+function countThursdays(year,month){let n=0;for(let d=new Date(year,month,1);d.getMonth()===month;d.setDate(d.getDate()+1))if(d.getDay()===4)n++;return n}
+function freqLabel(f){return ({weekly:'Semanal',monthly:'Mensual',biweekly:'Quincenal',once:'Único'})[f]||f}
+function paidThisPeriod(c){return state.payments.some(p=>p.commitmentId===c.id&&p.period===periodKey(c))}
+function periodKey(c){let d=new Date();if(c.frequency==='monthly')return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;return today()}
+function totals(){
+ let active=state.commitments.filter(c=>c.active!==false);
+ let weekly=active.filter(c=>c.frequency==='weekly').reduce((s,c)=>s+Number(c.amount||0),0);
+ let monthly=active.filter(c=>c.frequency==='monthly').reduce((s,c)=>s+Number(c.amount||0),0);
+ let biweekly=active.filter(c=>c.frequency==='biweekly').reduce((s,c)=>s+Number(c.amount||0),0);
+ return {weekly,monthly,biweekly,weeklyReserve:monthly*12/52+biweekly*26/52}
+}
+function render(){
+ $('income').value=state.income;$('anchor').value=state.anchor;
+ let t=totals(),available=Number(state.income)-t.weekly-t.weeklyReserve;
+ $('incomeCard').textContent=money(state.income);$('availableCard').textContent=money(available);$('availableCard').className='big '+(available>=0?'green':'red');
+ $('weeklyTotal').textContent=money(t.weekly);$('monthlyReserve').textContent=money(t.weeklyReserve);$('weeklyAvailable').textContent=money(available);$('weeklyAvailable').className=available>=0?'green':'red';
+ let now=new Date(),y=now.getFullYear(),m=now.getMonth(),count=countThursdays(y,m),monthSpend=t.weekly*count+t.monthly+t.biweekly*(count/2);
+ $('currentMonthTitle').textContent=now.toLocaleDateString('es-CA',{month:'long',year:'numeric'});$('currentCount').textContent=count+' jueves';$('currentIncome').textContent=money(count*state.income);$('currentBalance').textContent=money(count*state.income-monthSpend);
+ const active=state.commitments.filter(c=>c.active!==false);
+ $('commitmentList').innerHTML=active.length?active.map(c=>`<div class="item"><div class="row"><b>${esc(c.name)}</b><b>${money(c.amount)}</b></div><div class="row"><span class="small">${freqLabel(c.frequency)}${c.due?' · vence día '+c.due:''}</span><span class="small">${state.payments.filter(p=>p.commitmentId===c.id).length} pagos registrados</span></div><div class="row" style="margin-top:8px"><button class="secondary" onclick="editCommitment(${c.id})">Editar</button><button class="secondary danger" onclick="deleteCommitment(${c.id})">Eliminar</button></div></div>`).join(''):'<p class="small">Todavía no hay compromisos.</p>';
+ $('payCommitment').innerHTML=active.map(c=>`<option value="${c.id}">${esc(c.name)} — ${freqLabel(c.frequency)}</option>`).join('');
+ $('paymentHistory').innerHTML=state.payments.slice().reverse().map(p=>{let c=state.commitments.find(x=>x.id===p.commitmentId);return `<div class="item"><div class="row"><b>${esc(c?.name||'Compromiso eliminado')}</b><b>${money(p.amount)}</b></div><div class="small">${p.date} · presupuesto: ${money(c?.amount||0)}</div></div>`}).join('')||'<p class="small">Aún no hay pagos registrados.</p>';
+ let next=active.filter(c=>c.frequency==='monthly').sort((a,b)=>(Number(a.due)||32)-(Number(b.due)||32)).slice(0,5);
+ $('upcoming').innerHTML=next.map(c=>`<div class="row item"><span>${esc(c.name)} <span class="small">${c.due?'día '+c.due:'fecha por definir'}</span></span><b>${money(c.amount)}</b></div>`).join('')||'<p class="small">Agrega compromisos para verlos aquí.</p>';
+ renderCalendar();
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+window.editCommitment=id=>{let c=state.commitments.find(x=>x.id===id);let amount=prompt('Nuevo importe presupuestado (CAD):',c.amount);if(amount===null)return;let name=prompt('Nombre:',c.name);if(name===null)return;let due=prompt('Día de vencimiento (opcional):',c.due||'');if(due===null)return;c.amount=Math.max(0,Number(amount)||0);c.name=name.trim()||c.name;c.due=due;save()};
+window.deleteCommitment=id=>{if(confirm('¿Eliminar este compromiso? El historial de pagos se conserva.')){let c=state.commitments.find(x=>x.id===id);c.active=false;save()}};
+function renderCalendar(){let y=Number($('calendarYear').value)||new Date().getFullYear();$('monthGrid').innerHTML=Array.from({length:12},(_,m)=>{let n=countThursdays(y,m);return `<div class="month ${n===5?'five':''}"><span>${new Date(y,m,1).toLocaleDateString('es-CA',{month:'long'})}</span><b>${n}</b><span>jueves de pago</span></div>`}).join('')}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));['home','commitments','payments','calendar'].forEach(id=>$(id).classList.toggle('hidden',id!==b.dataset.tab))}));
+$('saveSettings').onclick=()=>{state.income=Math.max(0,Number($('income').value)||0);state.anchor=$('anchor').value;save()};
+$('addCommitment').onclick=()=>{let name=$('newName').value.trim(),amount=$('newAmount').value;if(!name||amount===''||Number(amount)<0){alert('Escribe un nombre y un importe válido.');return}state.commitments.push({id:Date.now(),name,amount:Number(amount),frequency:$('newFrequency').value,due:$('newDue').value,date:$('newDate').value,active:true});$('newName').value='';$('newAmount').value='';$('newDue').value='';$('newDate').value='';save()};
+$('recordPayment').onclick=()=>{let id=Number($('payCommitment').value),amount=$('paidAmount').value,date=$('paidDate').value;if(!id||amount===''||Number(amount)<0||!date){alert('Selecciona un compromiso e introduce importe y fecha.');return}let c=state.commitments.find(x=>x.id===id);state.payments.push({id:Date.now(),commitmentId:id,amount:Number(amount),date,period:periodKey(c)});$('paidAmount').value='';save();alert('Pago registrado.')};
+$('calendarYear').innerHTML=Array.from({length:9},(_,i)=>new Date().getFullYear()-2+i).map(y=>`<option>${y}</option>`).join('');$('calendarYear').value=new Date().getFullYear();$('calendarYear').onchange=renderCalendar;
+$('paidDate').value=today();render();
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body></html>
